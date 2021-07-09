@@ -4,6 +4,7 @@ import {TouchableOpacity} from 'react-native';
 import {Text, View, TextInput, StyleSheet} from 'react-native';
 import {connect} from 'react-redux';
 import Chat from '../Chat/Chat';
+import reactotron from 'reactotron-react-native';
 
 const HomeScreen = (props: any) => {
   const [user, setUser] = useState('');
@@ -29,13 +30,18 @@ const HomeScreen = (props: any) => {
               isDistinct: true,
               isGroup: false,
             };
-            // if (!user.length) return;
-            // props.navigation.navigate('ChatScreen');
+            if (!user.length) return;
             ChatUtil.getStringeeClient().createConversation(
               userIds,
               options,
               (status, code, message, conversation) => {
-                console.log(
+                if (status) {
+                  props.navigation.navigate('ChatScreen', {
+                    item: conversation,
+                    conversationName: options.name,
+                  });
+                }
+                reactotron.log(
                   'status-' +
                     status +
                     ' code-' +
@@ -43,15 +49,23 @@ const HomeScreen = (props: any) => {
                     ' message-' +
                     message +
                     ' conversation-' +
-                    conversation,
+                    conversation.id,
                 );
               },
             );
           }}>
           <Text style={{color: 'white', fontSize: 17}}> Chat</Text>
         </TouchableOpacity>
+
+        <Text
+          style={{textAlign: 'center', fontSize: 20, color: 'red'}}
+          onPress={() => {
+            ChatUtil.getStringeeClient().disconnect();
+            props.navigation.replace('Login');
+          }}
+          children={'Ngat ket noi'}
+        />
       </View>
-      <Chat />
     </>
   );
 };

@@ -3,6 +3,9 @@ import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {StringeeClient} from 'stringee-react-native-chat';
 import AsyncStorage from '@react-native-community/async-storage';
+import reactotron from 'reactotron-react-native';
+import {updateUserStringee, onObjectChange} from '../redux/reducers/ChatSilce';
+import {connect} from 'react-redux';
 
 const Chat = (props: any) => {
   //   const token = props?.route?.params?.token;
@@ -16,23 +19,26 @@ const Chat = (props: any) => {
 
   const connectStringee = async () => {
     const token = await AsyncStorage.getItem('token');
+    reactotron.log!('token', token);
+    if (!token) return;
     ChatUtil.getStringeeClient().connect(token);
-    console.log('token', token);
+    reactotron.log!('token', token);
   };
 
   const _clientDidConnect = ({userId}) => {
-    console.log('_clientDidConnect - ' + userId);
+    props.updateUserStringee(userId);
+    reactotron.log!('_clientDidConnect - ' + userId);
   };
   const _clientDidDisConnect = ({userId}) => {
-    console.log('_clientDidDisConnect - ' + userId);
+    reactotron.log!('_clientDidDisConnect - ' + userId);
   };
 
   const _clientDidFailWithError = () => {
-    console.log('_clientDidFailWithError');
+    reactotron.log!('_clientDidFailWithError');
   };
 
   const _clientRequestAccessToken = () => {
-    console.log('_clientRequestAccessToken');
+    reactotron.log!('_clientRequestAccessToken');
     //  Bạn cần lấy token mới và gọi connect lại ở đây
     // this.refs.client.connect("NEW_TOKEN");
   };
@@ -47,7 +53,7 @@ const Chat = (props: any) => {
     isVideoCall,
     customDataFromYourServer,
   }) => {
-    console.log(
+    reactotron.log!(
       'IncomingCallId-' +
         callId +
         ' from-' +
@@ -66,7 +72,10 @@ const Chat = (props: any) => {
         customDataFromYourServer,
     );
   };
-  const onObjectChange = () => {};
+  const onObjectChange = ({objectType, objectChanges, changeType}) => {
+    const payload = {objectType, objectChanges, changeType};
+    props.onObjectChange(payload);
+  };
 
   const clientEventHandlers = {
     onConnect: _clientDidConnect,
@@ -78,14 +87,12 @@ const Chat = (props: any) => {
   };
 
   return (
-    <View style={styles.container}>
-      <StringeeClient
-        ref={(stringeeClient: any) => {
-          ChatUtil.setStringeeClient(stringeeClient);
-        }}
-        eventHandlers={clientEventHandlers}
-      />
-    </View>
+    <StringeeClient
+      ref={(stringeeClient: any) => {
+        ChatUtil.setStringeeClient(stringeeClient);
+      }}
+      eventHandlers={clientEventHandlers}
+    />
   );
 };
 
@@ -94,4 +101,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-export default Chat;
+const mapStateToProps = state => ({
+  chatState: state.chatReducer,
+});
+
+const mapDispatchToProps = {
+  updateUserStringee,
+  // getListConvs,
+  onObjectChange,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Chat);

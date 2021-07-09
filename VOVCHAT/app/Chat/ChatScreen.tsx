@@ -4,13 +4,14 @@ import {Actions, GiftedChat, LoadEarlier, Send} from 'react-native-gifted-chat';
 import {connect} from 'react-redux';
 import ChatUtil from '../utils/ChatUtil';
 const isEqual = require('react-fast-compare');
+import {getListMessages} from '.././redux/reducers/ChatSilce';
+import reactotron from 'reactotron-react-native';
 // import Fire from '../utils/FirebaseConfig';
 // import ImagePicker from 'react-native-image-crop-picker';
 
 const ChatScreen = ({chatState, getListConvs, getListMessages, route}) => {
-  var currentStringeeId = chatState?.stringeeUser?.userId;
-  console.log('currentStringeeId', currentStringeeId);
-  console.log('ID', route?.params?.item?.id);
+  var currentStringeeId = chatState?.stringeeUser;
+  // console.log('ID', route?.params?.item?.id);
   const [imageUri, setImageUri] = useState('');
   const [imgLocal, setImageLocal] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -19,15 +20,9 @@ const ChatScreen = ({chatState, getListConvs, getListMessages, route}) => {
   //     sendImage();
   //   }, [imageUri]);
 
-  //   useEffect(() => {
-  //     getListMessages(route.params.item?.id);
-  //     ChatUtil.getStringeeClient().markConversationAsRead(
-  //       route.params.item?.id,
-  //       function (status, code, message) {
-  //         // markConversation(route.params?.item);
-  //       },
-  //     );
-  //   }, []);
+  useEffect(() => {
+    getListMessages(route?.params?.item?.id);
+  }, []);
 
   const onSend = useCallback(async (messages = []) => {
     var txtMsg = {
@@ -41,13 +36,13 @@ const ChatScreen = ({chatState, getListConvs, getListMessages, route}) => {
       ChatUtil.getStringeeClient().sendMessage(
         txtMsg,
         function (status, code, message, msg) {
-          console.log('status', status, code, message);
+          reactotron.log!('status', status, code, message);
           resolve(msg);
           console.log('messgae', msg);
         },
       );
     });
-    // getListConvs()
+    // getListConvs();
   }, []);
 
   const sendImage = async () => {
@@ -75,7 +70,7 @@ const ChatScreen = ({chatState, getListConvs, getListMessages, route}) => {
   };
 
   const formatMess = chatState?.messages?.map(mes => {
-    const currentStringeeId = chatState.stringeeUser?.userId;
+    const currentStringeeId = chatState.stringeeUser;
     // reactotron.log('currentStringeeId',chatState)
     var userId =
       route.params.item.participants[0].userId === currentStringeeId
@@ -147,11 +142,11 @@ const ChatScreen = ({chatState, getListConvs, getListMessages, route}) => {
   return (
     <View style={styles.container}>
       <GiftedChat
-        // messages={formatMess}
-        // onSend={messages => onSend(messages)}
+        messages={formatMess}
+        onSend={messages => onSend(messages)}
         // renderSend={renderSend}
         // renderActions={renderActions}
-        // user={{_id: currentStringeeId}}
+        user={{_id: currentStringeeId}}
         isLoadingEarlier={true}
         maxInputLength={200}
         timeFormat="HH:mm"
@@ -180,13 +175,12 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-  //   chatState: state.chatReducer,
+  chatState: state.chatReducer,
 });
 
 const mapDispatchToProps = {
   //   getListConvs,
-  //   getListMessages,
-  //   markConversation,
+  getListMessages,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatScreen);

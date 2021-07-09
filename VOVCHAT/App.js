@@ -7,8 +7,8 @@ import Chat from './app/Chat/Chat';
 export default function App() {
   return (
     <Provider store={store}>
-      <Navigator />
       <Chat />
+      <Navigator />
     </Provider>
   );
 }
